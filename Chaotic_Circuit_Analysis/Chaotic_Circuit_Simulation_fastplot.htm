@@ -1,0 +1,253 @@
+<!--                                                                         -->
+<!-- Physics 1321: Computational Methods in Physics                          -->
+<!-- University of Pittsburgh                                                -->
+<!-- by Brian R. D'Urso                                                      -->
+<!--                                                                         -->
+
+<html>
+<head>
+<title>Chaotic Circuit Simulation Fast Plot</title>
+<style type='text/css'>
+body {background-color: #eeeeee; margin: 10px; padding: 5px}
+a {align: left; color: black; font-size: 8pt; font-family: default; font-style: normal; font-weight: normal}
+p {align: left; color: black; font-size: 8pt; font-family: default; font-style: normal; font-weight: normal}
+h1 {align: center; font-size: 18pt; font-family: default; font-style: normal; font-weight: bold}
+h2 {align: left; font-size: 16pt; font-family: default; font-style: normal; font-weight: normal}
+h3 {align: left; font-size: 14pt; font-family: default; font-style: normal; font-weight: normal}
+h4 {align: left; font-size: 12pt; font-family: default; font-style: normal; font-weight: normal}
+h5 {align: left; font-size: 10pt; font-family: default; font-style: normal; font-weight: normal}
+h6 {align: left; font-size: 8pt; font-family: default; font-style: normal; font-weight: normal}
+object {align: left}
+table {align: center}
+</style></head>
+
+<body>
+<h1>Chaotic Circuit Simulation Fast Plot</h1>
+
+<object classid='Plot2D' id='bifurcationDiagram' width='70%' height='350'>
+</object>
+<object classid='mpl.Canvas' id='phasePortrait' width='30%' height='350'>
+</object>
+
+
+<br/>
+
+<object classid='Plot2D' id='timedomainWaveform' width='70%' height='300'>
+</object>
+<object classid='Plot2D' id='FFT' width='30%' height='300'>
+</object>
+<hr/>
+
+<table width='100%'><div class='cells'>
+<tr><td width='25%'>
+<h6>C1 [microF]</h6>
+<object id='prob_C1' classid='NumBox' width='100%'>
+    <param name='digits' value='6'/>
+    <param name='minimum' value='0'/>
+</object>
+</td><td width='25%'>
+<h6>C2 [microF]</h6>
+<object id='prob_C2' classid='NumBox' width='100%'>
+    <param name='digits' value='6'/>
+    <param name='minimum' value='0'/>
+</object>
+</td><td width='25%'>
+<h6>C3 [microF]</h6>
+<object id='prob_C3' classid='NumBox' width='100%'>
+    <param name='digits' value='6'/>
+    <param name='minimum' value='0'/>
+</object>
+</td></tr>
+</div></table>
+
+<hr/>
+<table width='100%'><div class='cells'>
+<tr><td width='25%'>
+<h6>R1 [kOhms]</h6>
+<object id='prob_R1' classid='NumBox' width='100%'>
+    <param name='digits' value='6'/>
+    <param name='minimum' value='0'/>
+</object>
+</td><td width='25%'>>
+<h6>R2 [kOhms]</h6>
+<object id='prob_R2' classid='NumBox' width='100%'>
+    <param name='digits' value='6'/>
+    <param name='minimum' value='0'/>
+</object>
+</td><td width='25%'>>
+<h6>R5 [kOhms]</h6>
+<object id='prob_R5' classid='NumBox' width='100%'>
+    <param name='digits' value='6'/>
+    <param name='minimum' value='0'/>
+</object>
+</td><td width='25%'>>
+<h6>R6 [kOhms]</h6>
+<object id='prob_R6' classid='NumBox' width='100%'>
+    <param name='digits' value='6'/>
+    <param name='minimum' value='0'/>
+</object>
+</td><td width='25%'>>
+<h6>R7 [kOhms]</h6>
+<object id='prob_R7' classid='NumBox' width='100%'>
+    <param name='digits' value='6'/>
+    <param name='minimum' value='0'/>
+</object>
+</td><td width='25%'>>
+<h6>R8 [kOhms]</h6>
+<object id='prob_R8' classid='NumBox' width='100%'>
+    <param name='digits' value='6'/>
+    <param name='minimum' value='0'/>
+</object>
+</td><td width='25%'>>
+<h6>R9 [kOhms]</h6>
+<object id='prob_R9' classid='NumBox' width='100%'>
+    <param name='digits' value='6'/>
+    <param name='minimum' value='0'/>
+</object>
+</td><td width='25%'>>
+<h6>R10 [kOhms]</h6>
+<object id='prob_R10' classid='NumBox' width='100%'>
+    <param name='digits' value='6'/>
+    <param name='minimum' value='0'/>
+</object>
+</td><td width='25%'>
+<h6>Rin [kOhms]</h6>
+<object id='prob_Rin' classid='NumBox' width='100%'>
+    <param name='digits' value='6'/>
+    <param name='minimum' value='0'/>
+</object>
+</td><td width='25%'>
+<h6>Vin [V]</h6>
+<object id='prob_Vin' classid='NumBox' width='100%'>
+    <param name='digits' value='6'/>
+    <param name='minimum' value='0'/>
+</object>
+</td></tr>
+</div></table>
+
+<hr/>
+
+<table width='100%'><div class='cells'>
+<tr><td width='25%'> 
+<h6>t Start [s]</h6>
+<object id='prob_t_start' classid='NumBox' width='100%'>
+    <param name='digits' value='6'/>
+    <param name='minimum' value='0'/>
+</object>
+</td><td width='25%'>
+<h6>t End [s]</h6>
+<object id='prob_t_end' classid='NumBox' width='100%'>
+    <param name='digits' value='6'/>
+    <param name='minimum' value='0'/>
+</object>
+</td><td width='25%'>
+<h6>t Delta [s]</h6>
+<object id='prob_t_delta' classid='NumBox' width='100%'>
+    <param name='digits' value='6'/>
+    <param name='minimum' value='0'/>
+</object>
+</td><td width='25%'> 
+<h6>RV Start [kOhm]</h6>
+<object id='prob_RVstart' classid='NumBox' width='100%'>
+    <param name='digits' value='6'/>
+    <param name='minimum' value='0'/>
+</object>
+</td><td width='25%'>
+<h6>RV End [kOhms]</h6>
+<object id='prob_RVend' classid='NumBox' width='100%'>
+    <param name='digits' value='6'/>
+    <param name='minimum' value='0'/>
+</object>
+</td><td width='25%'>
+<h6>RV Delta [kOhms]</h6>
+<object id='prob_RVdelta' classid='NumBox' width='100%'>
+    <param name='digits' value='6'/>
+    <param name='minimum' value='0'/>
+</object>
+</td><td width='25%'>
+<h6>FFT Threshold [Amplitude]</h6>
+<object id='fft_threshold' classid='NumBox' width='100%'>
+    <param name='digits' value='6'/>
+    <param name='minimum' value='0'/>
+</object>
+</td></tr>
+</div></table>
+
+<table width='100%'><div class='cells'>
+<tr><td width='25%'> 
+<object id='saveBifurcation' classid='CheckBox' width='100%'>
+    <param name='label' value='Save Bifurcation Data'/>
+    <param name='save' value='False'/>
+</object>
+</td><td width='25%'>
+<object id='savePhasePortrait' classid='CheckBox' width='100%'>
+    <param name='label' value='Save Phase Portrait Data'/>
+    <param name='save' value='False'/>
+</object>
+</td><td width='25%'>
+<object id='saveWaveform' classid='CheckBox' width='100%'>
+    <param name='label' value='Save Waveform Data'/>
+    <param name='save' value='False'/>
+</object>
+</td><td width='25%'>
+<object id='saveFFT' classid='CheckBox' width='100%'>
+    <param name='label' value='Save FFT Data'/>
+    <param name='save' value='False'/>
+</object>
+</td><td width='25%'>
+<object classid='Button' width='100%'>
+    <param name='label' value='Run'/>
+    <param name='action' value='Chaotic_Circuit_Simulation_fastplot.run'/>
+</object>
+</td><td width='25%'>
+<object classid='Button' id='stop' width='100%'>
+    <param name='toggle' value='True'/>
+    <param name='label' value='Stop'/>
+</object>
+</td><td width='25%'>
+<object classid='Button' width='100%'>
+    <param name='label' value='Clear All'/>
+    <param name='action' value='Chaotic_Circuit_Simulation_fastplot.clearAll'/>
+</object>
+</td></tr>
+</div></table>
+
+<br/>
+
+<object id='plotBifurcation' classid='CheckBox' width='14.1%'>
+    <param name='label' value='Plot Bifurcation Data'/>
+    <param name='save' value='True'/>
+</object>
+<object id='plotPhasePortrait' classid='CheckBox' width='14.1%'>
+    <param name='label' value='Plot Phase Portrait Data'/>
+    <param name='save' value='True'/>
+</object>
+<object id='plotWaveform' classid='CheckBox' width='14.1%'>
+    <param name='label' value='Plot Waveform Data'/>
+    <param name='save' value='True'/>
+</object>
+<object id='plotFFT' classid='CheckBox' width='14.1%'>
+    <param name='label' value='Plot FFT Data'/>
+    <param name='save' value='True'/>
+</object>
+<br/>
+<object classid='TextIOBox' id='messages' width='100%' height='100'>
+</object>
+
+<hr/>
+<object classid='Shell' id='shell' width='100%' height='200'>
+</object>
+
+<object classid='ScriptLoader' width='0%'>
+    <param name='filename' value='Chaotic_Circuit_Simulation_fastplot'/>
+    <param name='label' value=''/>
+    <param name='initialization_action' value='Chaotic_Circuit_Simulation_fastplot.initialize'/>
+</object>
+<br/>
+<object classid='ParameterLoader' width='0%'>
+    <param name='filename' value='Chaotic_Circuit_Simulation_fastplot_Defaults.txt'/>
+    <param name='label' value=''/>
+</object>
+
+</body>
+</html>
