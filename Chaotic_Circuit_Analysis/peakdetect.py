@@ -1,3 +1,6 @@
+# Author: Dr. Brian D'Urso
+# University of Pittsburgh
+
 import numpy as np
 from math import pi, log
 import pylab

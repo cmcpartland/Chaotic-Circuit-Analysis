@@ -1,4 +1,9 @@
-# load libraries
+#Author: Connor McPartland 
+#University of Pittsburgh
+#2013
+
+
+#load libraries
 #
 import numpy as np
 import peakdetect as pkdt
@@ -10,12 +15,13 @@ from scipy import *
 def initialize(shell, **kwargs):
     shell.interact(kwargs.copy())
 
-def clearAll(messages, bifurcationDiagram, phasePortrait, timedomainWaveform, FFT, **kwargs):
-    bifurcationDiagram.clear()
+def clearAll(messages, bifurcationDiagram, phasePortrait, poincarePlot, timedomainWaveform, FFT, **kwargs):
+    #bifurcationDiagram.clear()
     phasePortrait.figure.clear()
     timedomainWaveform.clear()
     FFT.clear()
     messages.clear()
+    poincarePlot.clear()
 
 def clear_bifurcationDiagram(bifurcationDiagram, messages, **kwargs):
     bifurcationDiagram.clear()
@@ -34,66 +40,32 @@ def clear_FFT(FFT, messages, **kwargs):
     FFT.clear()
     messages.clear()
 
-#
-# run: the simulation
-#
-
-n_depvars = 3
-f_return = np.zeros((n_depvars), dtype=np.float)
-x_temp = np.zeros((n_depvars), dtype=np.float)
-k1 = np.zeros((n_depvars), dtype=np.float)
-k2 = np.zeros((n_depvars), dtype=np.float)
-k3 = np.zeros((n_depvars), dtype=np.float)
-k4 = np.zeros((n_depvars), dtype=np.float)
-
-def RK4(f, dt, t, x):
-    #global f_return, x_temp, k1, k2, k3, k4
-    f(t, x, f_return)
-    k1[:] = dt*f_return 
-    x_temp[:] = x + k1/2. 
-    f(t + dt/2., x_temp, f_return) 
-    k2[:] = dt*f_return 
-    x_temp[:] = x + k2/2. 
-    f(t + dt/2., x_temp, f_return)
-    k3[:] = dt*f_return  
-    x_temp[:] = x + k3 
-    f(t + dt, x_temp, f_return) 
-    k4[:] = dt*f_return  
-    x += (k1+2.*(k2+k3)+k4)/6.
-
-def run(prob_t_start, prob_t_end, prob_t_delta, 
-        prob_RVstart, prob_RVend, prob_RVdelta, fft_threshold,
-        prob_C1, prob_C2, prob_C3,
-        prob_R1, prob_R2, prob_R5, prob_R6, prob_R7, prob_R8, prob_R9, prob_R10, 
-        prob_Vin, prob_Rin, 
-        saveBifurcation, savePhasePortrait, saveWaveform, saveFFT,
-        plotBifurcation, plotPhasePortrait, plotWaveform, plotFFT,
-        bifurcationDiagram, phasePortrait, timedomainWaveform, FFT, messages, stop, **kwargs):
-
-                
-    C1 = prob_C1.value*1.0e-6     #Convert to Farads
-    C2 = prob_C2.value*1.0e-6     #Convert to Farads
-    C3 = prob_C3.value*1.0e-6     #Convert to Farads
-    R1 = prob_R1.value*1.0e3      #Convert to Ohms
-    R2 = prob_R2.value*1.0e3      #Convert to Ohms
-    R5 = prob_R5.value*1.0e3      #Convert to Ohms
-    R6 = prob_R6.value*1.0e3      #Convert to Ohms
-    R7 = prob_R7.value*1.0e3      #Convert to Ohms
-    R8 = prob_R8.value*1.0e3      #Convert to Ohms
-    R9 = prob_R9.value*1.0e3      #Convert to Ohms
-    R10 = prob_R10.value*1.0e3    #Convert to Ohms
-    Rin = prob_Rin.value*1.0e3    #Convert to Ohms
-    Vin = prob_Vin.value
+def plot_RV(poincarePlot, plotPhasePortrait, plotWaveform, plotFFT, open_file, params_file, FFTthreshold_box,
+        phasePortrait, timedomainWaveform, FFT, messages, stop, **kwargs):
+    p_file = open(params_file.value, 'r')
+    C1 = float(p_file.readline().split(':')[1])
+    C2 = float(p_file.readline().split(':')[1])
+    C3 = float(p_file.readline().split(':')[1])
+    R1 = float(p_file.readline().split(':')[1])
+    R2 = float(p_file.readline().split(':')[1])
+    R5 = float(p_file.readline().split(':')[1])
+    R6 = float(p_file.readline().split(':')[1])
+    R7 = float(p_file.readline().split(':')[1])
+    R8 = float(p_file.readline().split(':')[1])
+    R9 = float(p_file.readline().split(':')[1])
+    R10 = float(p_file.readline().split(':')[1])
+    Rin = float(p_file.readline().split(':')[1])
+    Vin = float(p_file.readline().split(':')[1])
+    RVstart = float(p_file.readline().split(':')[1])
+    RVend = float(p_file.readline().split(':')[1])
+    RVdelta = float(p_file.readline().split(':')[1])
+    #DPC_start = float(p_file.readline().split(':')[1])
+    #DPC_end = float(p_file.readline().split(':')[1])
+    t_start = float(p_file.readline().split(':')[1])
+    t_end = float(p_file.readline().split(':')[1])
+    t_delta = float(p_file.readline().split(':')[1])
+    Lambda =  1/(C3*R10)
     
-    Lambda = 1/(C3*R10)
-    A1 = -1.0    #This gets redefined inside the loop below   
-    A2 = -R7/(C1*C2*R5*R6*R8)
-    A3 = +R7/(C1*C2*C3*R5*R6*R9*R10)
-    A4 = -Vin/(C1*C2*C3*Rin*R6*R10)
-    
-    def D(x):
-        return -(R2/R1)*np.min((x, 0.0))
-
     def F(t, x, f_return): 
         f_return[0] = x[1]      #x
         f_return[1] = x[2]      #x''
@@ -102,173 +74,186 @@ def run(prob_t_start, prob_t_end, prob_t_delta,
     def PowerSpectrum(f):
         return (f*f.conjugate()).real/len(f)**2
 
-    RVstart = float(prob_RVstart.value)*1.0e3      #Convert to Ohms
-    RVend = float(prob_RVend.value)*1.0e3      #Convert to Ohms
-    RVdelta = float(prob_RVdelta.value)*1.0e3      #Convert to Ohms
-
-
-    
-    #Output files
-    bifurcationDiagram_outfile = open('bifurcationDiagram.txt', 'w')
-    phasePortrait_outfile = open('phasePortrait.txt', 'w')
-    timedomainWaveform_outfile = open('timedomainWaveform.txt', 'w')
-    FFT_outfile = open('fft.txt', 'w')
-
-    
-    bifurcationDiagram.clear()
     #phasePortrait.clear()
     timedomainWaveform.clear()
+    FFT.clear()
     messages.clear()
     
-    #Set up plotting objects
-    bifurcationDiagram.set_plot_properties(
-        title='Bifurcation Diagram',
-        x_label='Rv [kOhms]',
-        y_label='x_maxima [V]',
-        x_limits = (RVstart*1e-3, RVend*1e-3),
-        aspect_ratio='auto')
-    # For 2d plot of phase diagram only. 
-    #phasePortrait.set_plot_properties(
-    #    title='Phase Portrait',
-    #    x_label='x [V]',
-    #    y_label='x_dot [V]',
+    
+    data_file = open(open_file.value, 'r')
+    messages.write('Starting simulation...\n')
+    data_file.readline()
+    data = data_file.readlines()
+    data.pop(0)
+    data_array = np.zeros((len(data),4))
+    for i in range(len(data)):
+        data_array[i] = tuple(data[i].split('\t '))
+    #ts = len(data_array)
+    #t_start = data_array[int(ts*80/100),0]
+    #t_end = data_array[ts-1,0]
+    #t_delta = data_array[1,0]-data_array[0,0]
+    waveformSize = np.int(t_end/t_delta)
+    # data_array[0] = t, data_array[1] = x, data_array[2] = xdot, data_array[3] = xdotdot
+    t_index = np.where(data_array[:,0]>t_start)[0][0]
+    
+    RV = float(open_file.value.split('_')[-1].strip('.txt'))
+    #global data_type
+    threshold = float(FFTthreshold_box.value)
+        
+    #bifurcationDiagram.set_plot_properties(
+    #    title='Bifurcation Diagram',
+    #    x_label='Rv [kOhms]',
+    #    y_label='x_maxima [V]',
+    #    x_limits=(RVstart*1e-3-.1, 1e-3*RVend+1),
     #    aspect_ratio='auto')
+
+    # Set up plotting objects
+    # Initialize a Poincare Plot
+    poincarePlot.set_plot_properties(
+        title='Poincare Plot',
+        x_label='x [V]',
+        y_label='x_dot [V]',
+        aspect_ratio='auto')
+
+    # Initialize a time-domain plot
     timedomainWaveform.set_plot_properties(
         title='Time-Domain Waveform',
         x_label='t (s)',
         y_label='x [V]',
         aspect_ratio='auto')  
+    
+    # Initialize a FFT plot
     FFT.set_plot_properties(
         title='FFT',
         x_label='f [Hz]',
         y_label='Power',
+        y_scale='log',
         aspect_ratio='auto')
     
-    bifurcationDiagram.new_curve(key='bif', memory='growable', length=10000, animated=False,
-                marker_style='.', line_color='black', line_style='')
-    #The next two lines are for a 2d plot of phasePortrait only.
-    #phasePortrait.new_curve(key='phase', memory='growable', length=10000, animated=False,
-    #            line_color='red', line_width=1., line_style='-')
+    #bifurcationDiagram.new_curve(key='bif', memory='growable', length=10000, animated=False,
+    #            marker_style='.', line_color='black', line_style='')
+    poincarePlot.new_curve(key='pp', memory='growable', length=10000, animated=False,
+                line_color='red', line_style='', marker_style='.')
     timedomainWaveform.new_curve(key='tdw', memory='growable', length=10000, animated=False,
                 line_color='green', marker_style='.', line_style='')
     timedomainWaveform.new_curve(key='tdw_max', memory='growable', length=10000, animated=False,
                 marker_style='o', line_color='red', line_style='')
     FFT.new_curve(key='fft', memory='growable', length=10000, animated=False,
                 line_color='black', line_width=1., line_style='-')
-    
-    
-    # initial dependent variable values [x(0), x'(0), x''(0)]
-    x = np.array([0.0, 0.0, 0.0])
-    
-    messages.write('Starting simulation...\n')
-    for RV in np.arange(RVstart, RVend*(1.001), RVdelta):
-        if stop.value: break
-        
-        messages.write('RV = %g\n' % (RV/1.0e3))
-
-        t_delta = prob_t_delta.value
-        t_start = prob_t_start.value
-        t_end = prob_t_end.value
-        waveformSize = np.int(t_end/t_delta)
-        phasePortrait_points = np.zeros((waveformSize, 3), dtype='float')
-        timedomainWaveform_points = np.zeros((waveformSize, 2), dtype='float')
-        A1 = -1.0/(C1*RV)
-        t = 0
-        t_index = 0
-        threshold = fft_threshold.value
-        for i in range(waveformSize): 
-            phasePortrait_points[i] = (x[0], -x[1]/Lambda, -x[2]/Lambda**2)
-            timedomainWaveform_points[i] = (t, x[0])
-            RK4(F, t_delta, t, x)
-            t += t_delta
-        #phasePortrait.clear()
-        #timedomainWaveform.clear()
-        #FFT.clear()
-        #phasePortrait.figure.clear()
+                
+    if plotPhasePortrait.value:
         phasePortrait_axes = phasePortrait.figure.add_subplot(111, projection='3d')
         phasePortrait_axes.set_xlabel('x[v]')
         phasePortrait_axes.set_ylabel('xdot[v]')
         phasePortrait_axes.set_zlabel('xdotdot[v]')
         phasePortrait_axes.set_title('Phase Portrait')
-        #Compute FFT. 
-        if (plotFFT.value or saveFFT.value):
-            ffts = np.delete(np.fft.rfft(timedomainWaveform_points[:,1]), int(waveformSize)/2)
-        #Use only positive, non-zero frequencies.
-            fs = np.fft.fftfreq(waveformSize, t_delta)[1:waveformSize/2]
-            ps = PowerSpectrum(ffts[1:])
-        #Cut off plotting frequencies with no significant amplitude in f-space.
-            fft_indices = np.where(ps > threshold)[0] 
+        X = data_array[t_index:,1]
+        Y = -1*data_array[t_index:,2]/Lambda
+        Z = -1*data_array[t_index:,3]/Lambda**2
+        poincare_points = []
+        for i in range(len(Z)-1):
+            if Z[i+1] > 0 and Z[i] < 0:
+                poincare_points.append((X[i+1], Y[i+1]))
+        points = np.array(poincare_points)
+        poincarePlot.set_data('pp', np.column_stack((points[:,0], points[:,1])))
+        poincarePlot.set_plot_properties(x_limits=(np.amin(X)-.1, np.amax(X)+.1), y_limits=(np.amin(Y)-.1, np.amax(Y)+.1))
+        #3d plot in phase-space - illustrates the fact that even though the function looks like it returns to its initial value on a 2d-map,
+        # in reality it is 'traveling' in a 3rd dimension, and must travel in the negative direction of the 3rd dimension to truly return
+        # to initial value
+        phasePortrait_axes.plot(xs=X, ys=Y, zs=Z, color='red')
+        #3d plot is flattened onto bottom-most x-y plane of the graph
+        phasePortrait_axes.plot(xs=X, ys=Y, zs=np.amin(Z)*np.ones(len(Z)), color='blue', linestyle='dotted', linewidth=0.5)
+        #phasePortrait_axes.plot(xs=points[:,0], ys=points[:,1], zs=np.amin(Z)*np.ones(len(points)), color='blue', linestyle='dotted', linewidth=0.5)
+        phasePortrait.canvas.draw()
 
-        t_index = np.where(timedomainWaveform_points[:,0]>t_start)[0][0]
-        if plotPhasePortrait.value:
-            X = phasePortrait_points[t_index:,0]
-            Y = phasePortrait_points[t_index:,1]
-            Z = phasePortrait_points[t_index:,2]
-            #3d plot in phase-space
-            phasePortrait_axes.plot(xs=X, ys=Y, zs=Z, color='red')
-            #3d plot is flattened onto bottom-most x-y plane of the graph
-            phasePortrait_axes.plot(xs=X, ys=Y, zs=np.amin(Z)*np.ones(len(Z)), color='blue', linestyle='dotted', linewidth=0.5)
-            phasePortrait.canvas.draw()
-            #the next line is for a 2d plot only
-            #phasePortrait.set_data('phase', np.column_stack((phasePortrait_points[t_index:,0], phasePortrait_points[t_index:,1])))
-        if plotWaveform.value:
-            timedomainWaveform.set_data('tdw', np.column_stack((timedomainWaveform_points[t_index:,0],timedomainWaveform_points[t_index:,1])))
-        if plotFFT.value:
-            FFT.set_data('fft', np.column_stack((fs[fft_indices[0]-20:fft_indices[-1]+20], ps[fft_indices[0]-20:fft_indices[-1]+20])))
-        window_length = 10
-        sensitivity = 0
-        
-        # Skip the initial waveform point, i.e., (0, 0)
-        _max, _min = pkdt.peakdetect(timedomainWaveform_points[:,1], timedomainWaveform_points[:,0], window_length, sensitivity)
-        #messages.write('I executed peakdetect\n')
-        #messages.write('I found peaks = %g\n' % size(_max))
-        #for p in _max :
-        #    messages.write('max point: (%g, ' % p[0])
-        #    messages.write('%g)\n' % p[1])
-        #Get rid of maxima that occur at endpoints
-        if(_max[0][0] == timedomainWaveform_points[0,0]):
-            _max = _max[1:]
-        if(_max[-1][0] == t):
-            _max = _max[0:-1]
-        times = [p[0] for p in _max]
-        maxima = [p[1] for p in _max]
-        times_index = 0
-        
-        for i in range(len(times)):
-            if times[i] > t_start:
-                times_index = i
-                break
-        if plotWaveform.value:
-            timedomainWaveform.set_data('tdw_max', np.column_stack((times[times_index:], maxima[times_index:])))
+    #Compute FFT. 
+    if (plotFFT.value):
+        temp = np.fft.rfft(data_array[:,1])
+        ffts = np.delete(temp, len(temp)-1)
+    #Use only positive, non-zero frequencies.
+        fs = np.fft.fftfreq(waveformSize, t_delta)[1:waveformSize/2]
+        ps = PowerSpectrum(ffts[1:])
+    #Cut off plotting frequencies with no significant amplitude in f-space.
+        fft_indices = np.where(ps > threshold)[0] 
 
-        if savePhasePortrait.value:
-            phasePortrait_outfile.write('RV = {}\n'.format(RV/1.0e3))
-            for p in phasePortrait_points:
-                phasePortrait_outfile.write('{}\t{}\t{}\n'.format(p[0], p[1], p[2]))
-
-        if saveWaveform.value:
-            timedomainWaveform_outfile.write('RV = {}\n'.format(RV/1.0e3))
-            for p in timedomainWaveform_points:
-                timedomainWaveform_outfile.write('{}\t{}\n'.format(p[0], p[1]))
-        
-        if saveFFT.value:
-            FFT_outfile.write('RV = %f\n' % (RV/1.0e3))
-            for i in range(len(fs)):
-                FFT_outfile.write('%f\t%f\n' % (fs[i], ps[i]))
-        
-        # Bifurcation plot
-        bifurcationDiagram_points = np.column_stack((RV*np.ones(size(maxima))/1.0e3, maxima))
-        if plotBifurcation.value:
-            bifurcationDiagram.append_data('bif', bifurcationDiagram_points)
-        if saveBifurcation.value:
-            for p in bifurcationDiagram_points:
-                bifurcationDiagram_outfile.write('{}\t{}\n'.format(p[0], p[1]))
     
-    bifurcationDiagram_outfile.close()
-    phasePortrait_outfile.close()
-    timedomainWaveform_outfile.close()
-    FFT_outfile.close()
+    if plotWaveform.value:
+        timedomainWaveform.set_data('tdw', np.column_stack((data_array[t_index:,0],data_array[t_index:,1])))
+    if plotFFT.value:
+        FFT.set_data('fft', np.column_stack((fs[fft_indices[0]-20:fft_indices[-1]+20], ps[fft_indices[0]-20:fft_indices[-1]+20])))
+    window_length = 10
+    sensitivity = 0
         
-    # reset the stop button in case it was pushed
-    stop.value = False
-    messages.write('Done.\n')
+    # Skip the initial waveform point, i.e., (0, 0)
+    _max, _min = pkdt.peakdetect(data_array[:,1], data_array[:,0], window_length, sensitivity)
+    #messages.write('I executed peakdetect\n')
+    #messages.write('I found peaks = %g\n' % size(_max))
+    #for p in _max :
+    #    messages.write('max point: (%g, ' % p[0])
+    #    messages.write('%g)\n' % p[1])
+    #Get rid of maxima that occur at endpoints
+    if(_max[0][0] == data_array[0,0]):
+        _max = _max[1:]
+    if(_max[-1][0] == t_end):
+        _max = _max[0:-1]
+    times = [p[0] for p in _max]
+    maxima = [p[1] for p in _max]
+    times_index = 0
+    
+    for i in range(len(times)):
+        if times[i] > t_start:
+            times_index = i
+            break
+    if plotWaveform.value:
+        timedomainWaveform.set_data('tdw_max', np.column_stack((times[times_index:], maxima[times_index:])))
+    messages.write('Data plotting done.\n')
+
+
+# Bifurcation plot      
+def plot_bifurcation(bifurcationDiagram, bifurcation_file, messages, **kwargs):
+    
+    #bifurcationDiagram_points = np.column_stack((RV*np.ones(size(maxima))/1.0e3, maxima))
+    bifurcationDiagram.figure.clear()
+    b_file = open(bifurcation_file.value, 'r')
+    first_line = b_file.readline().split('\t')
+    data_type = first_line[0]
+        
+    b_data = b_file.readlines()
+    b_points = np.zeros((len(b_data), 2))
+    for i in range(len(b_data)):
+        b_points[i] = tuple(b_data[i].split('\t'))
+    if data_type == 'DPC':
+        f = open("saved_RV_and_DPC_Thu Apr 11 18-06-59 2013.txt", 'r')
+        f.readline()
+        f_data = f.readlines()
+        dpcs = np.zeros(len(f_data))
+        Rvs = np.zeros(len(f_data))
+        Rv_values = np.zeros(len(b_points))
+        for i in range(len(f_data)):
+            temp = f_data[i].split('\t')
+            dpcs[i] = temp[0]
+            Rvs[i] = temp[1]
+        for i in range(len(b_points)):
+            Rv_values[i] = Rvs[np.where(b_points[i][0] == dpcs)[0]]
+        start_index = np.where(dpcs == b_points[:,0][0])[0]
+        end_index = np.where(dpcs == b_points[:,0][-1])[0]
+        b_points[:,0] = Rv_values/1000.
+    bifurcation_axes = bifurcationDiagram.figure.add_subplot(111)
+    bifurcation_axes.set_xlabel('Rv[kOhm]')
+    bifurcation_axes.set_xlimits=(b_points[:,0][0], b_points[:,0][-1])
+    bifurcation_axes.set_ylabel('x_maxima [v]')
+    bifurcation_axes.set_title('Bifurcation Diagram')
+    bifurcation_axes.scatter(b_points[:,0], b_points[:,1], color='black', marker='.')
+    bifurcationDiagram.canvas.draw()
+
+    #bifurcationDiagram.set_plot_properties(
+    #    title='Bifurcation Diagram',
+    #    x_label='DPC',
+    #    y_label='x_maxima [V]',
+    #    x_limits=(b_points[0,0]-.1, b_points[len(b_points)-1,0]+.1),
+    #    aspect_ratio='auto')
+    #bifurcationDiagram.new_curve(key='bif', memory='growable', length=10000, animated=False,
+    #            marker_style='.', line_color='black', line_style='')
+    #bifurcationDiagram.set_data('bif', b_points)
+    b_file.close()
+    messages.write('Bifurcation plot done.\n')
